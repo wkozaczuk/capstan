@@ -10,6 +10,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/cloudius-systems/capstan/hypervisor/hyperkit"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -302,6 +303,21 @@ func RunInstance(repo *util.Repo, config *runtime.RunConfig) error {
 			ConfigFile:   filepath.Join(dir, "osv.config"),
 		}
 		cmd, err = vmw.LaunchVM(config)
+	case "hkit":
+		dir := filepath.Join(util.ConfigDir(), "instances/hkit", id)
+		newConfig := &hyperkit.VMConfig{
+			Name:        id,
+			Image:       path,
+			VmlinuzPath: "",
+			Memory:      size,
+			Cpus:        config.Cpus,
+			Networking:  config.Networking,
+			ConfigFile:  filepath.Join(dir, "osv.config"),
+			MAC:         config.MAC,
+			Cmd:         config.Cmd,
+		}
+
+		cmd, err = hyperkit.LaunchVM(newConfig, config.Verbose)
 	default:
 		err = fmt.Errorf("%s: is not a supported hypervisor", config.Hypervisor)
 	}
