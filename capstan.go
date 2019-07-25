@@ -141,7 +141,7 @@ func main() {
 			ArgsUsage: "instance-name",
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "i", Value: "", Usage: "image_name"},
-				cli.StringFlag{Name: "p", Value: hypervisor.Default(), Usage: "hypervisor: qemu|vbox|vmw|gce"},
+				cli.StringFlag{Name: "p", Value: hypervisor.Default(), Usage: "hypervisor: qemu|vbox|vmw|gce|hkit"},
 				cli.StringFlag{Name: "m", Value: "1G", Usage: "memory size"},
 				cli.IntFlag{Name: "c", Value: 2, Usage: "number of CPUs"},
 				cli.StringFlag{Name: "n", Value: "nat", Usage: "networking: nat|bridge|tap|vhost"},
@@ -828,7 +828,7 @@ func main() {
 
 func isValidHypervisor(hypervisor string) bool {
 	switch hypervisor {
-	case "qemu", "vbox", "vmw", "gce":
+	case "qemu", "vbox", "vmw", "gce", "hkit":
 		return true
 	default:
 		return false

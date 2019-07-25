@@ -54,6 +54,12 @@ func LaunchVM(c *VMConfig, verbose bool, extra ...string) (*exec.Cmd, error) {
 	}
 
 	cmd := exec.Command(path, args...)
+
+	cmd.Stdin = os.Stdin
+	if err := cmd.Start(); err != nil {
+		return nil, err
+	}
+
 	return cmd, nil
 }
 
@@ -62,12 +68,15 @@ func (c *VMConfig) vmArguments() ([]string, error) {
 	//	return []string{}, fmt.Errorf("argument validation failed: %s", err.Error())
 	//}
 
+	//c.VmlinuzPath = "/Users/wkozaczuk/Tools/OSv-on-hyperkit/vmlinuz3.bin"
+	c.VmlinuzPath = "/Users/wkozaczuk/projects/hyperkit/vmlinuz7.bin"
+
 	args := make([]string, 0)
 	args = append(args, "-A")                                                      // Enable ACPI
 	args = append(args, "-x")                                                      // Enable x2APIC
 	args = append(args, "-c", strconv.Itoa(c.Cpus))                                // Number of cpus
 	args = append(args, "-m", strconv.FormatInt(c.Memory, 10)+"M")                 // Memory
-	args = append(args, "-f", fmt.Sprintf("kexec,%s,,'%s'", c.VmlinuzPath, c.Cmd)) //firmware, kernel and commandline
+	args = append(args, "-f", fmt.Sprintf("kexec,%s,,\"%s\"", c.VmlinuzPath, c.Cmd)) //firmware, kernel and commandline
 	args = append(args, "-l", "com1,stdio")                                        // ???
 	args = append(args, "-s", "0:0,hostbridge")                                    // PCI bus
 	args = append(args, "-s", "31,lpc")                                            // ???
@@ -127,10 +136,10 @@ var defaultHyperKits = []string{"hyperkit",
 	"/Applications/Docker.app/Contents/MacOS/com.docker.hyperkit"}
 
 func hyperkitExecutable() (string, error) {
-	paths := []string{}
+	paths := defaultHyperKits
 	path := os.Getenv("CAPSTAN_HYPERKIT_PATH")
 	if len(path) > 0 {
-		paths = append([]string{path}, defaultHyperKits...)
+		paths = append([]string{path}, paths...)
 	}
 	for _, path = range paths {
 		if _, err := os.Stat(path); err == nil {
