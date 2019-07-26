@@ -71,7 +71,7 @@ func (c *VMConfig) vmArguments() ([]string, error) {
 	args = append(args, "-x")                                                      // Enable x2APIC
 	args = append(args, "-c", strconv.Itoa(c.Cpus))                                // Number of cpus
 	args = append(args, "-m", strconv.FormatInt(c.Memory, 10)+"M")           // Memory
-	args = append(args, "-f", fmt.Sprintf("kexec,%s,,\"%s\"", c.VmlinuzPath, c.Cmd)) //firmware, kernel and commandline
+	args = append(args, "-f", fmt.Sprintf("kexec,%s,,%s", c.VmlinuzPath, c.Cmd)) //firmware, kernel and commandline
 	args = append(args, "-l", "com1,stdio")                                        // ???
 	args = append(args, "-s", "0:0,hostbridge")                                    // PCI bus
 	args = append(args, "-s", "31,lpc")                                            // ???
@@ -93,6 +93,7 @@ func (c *VMConfig) vmArguments() ([]string, error) {
 		if err != nil {
 			return args, errors.New(fmt.Sprintf("%s: failed to create vstate dir", vsockDirPath))
 		}
+		//TODO: Potentially add ',guest_forwards=8080' to the string below to handle port forwarding
 		args = append(args, "-s", fmt.Sprintf("%d,virtio-sock,guest_cid=%d,path=%s",
 			nextSlot, 3, vsockDirPath))
 		nextSlot++
