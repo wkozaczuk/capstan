@@ -105,14 +105,14 @@ func RunInstance(repo *util.Repo, config *runtime.RunConfig) error {
 				if err != nil {
 					return err
 				}
+				path = repo.ImagePath(config.Hypervisor, config.ImageName)
 				if remote {
 					err := Pull(repo, config.Hypervisor, config.ImageName)
 					if err != nil {
 						return err
 					}
-					path = repo.ImagePath(config.Hypervisor, config.ImageName)
 				} else {
-					return fmt.Errorf("%s: no such image", config.ImageName)
+					return fmt.Errorf("%s: no such image at: %s", config.ImageName, path)
 				}
 			}
 			if config.Hypervisor == "gce" && !image.IsCloudImage(config.ImageName) {
@@ -305,14 +305,19 @@ func RunInstance(repo *util.Repo, config *runtime.RunConfig) error {
 		cmd, err = vmw.LaunchVM(config)
 	case "hkit":
 		dir := filepath.Join(util.ConfigDir(), "instances/hkit", id)
+		vmlinuzLoaderPath, err := repo.GetVmlinuzLoaderPath()
+		if err != nil {
+			return err
+		}
 		newConfig := &hyperkit.VMConfig{
 			Name:        id,
 			Image:       path,
-			VmlinuzPath: "",
+			VmlinuzPath: vmlinuzLoaderPath,
 			Memory:      size,
 			Cpus:        config.Cpus,
 			Networking:  config.Networking,
 			ConfigFile:  filepath.Join(dir, "osv.config"),
+			InstanceDir: dir,
 			MAC:         config.MAC,
 			Cmd:         config.Cmd,
 		}

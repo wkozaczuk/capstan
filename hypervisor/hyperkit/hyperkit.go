@@ -1,6 +1,7 @@
 package hyperkit
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -20,6 +21,7 @@ type VMConfig struct {
 	Cpus        int
 	Networking  string
 	Bridge      string
+	InstanceDir string
 	ConfigFile  string
 	MAC         string
 }
@@ -64,18 +66,11 @@ func LaunchVM(c *VMConfig, verbose bool, extra ...string) (*exec.Cmd, error) {
 }
 
 func (c *VMConfig) vmArguments() ([]string, error) {
-	//if err := c.ValidateVmArguments(version); err != nil {
-	//	return []string{}, fmt.Errorf("argument validation failed: %s", err.Error())
-	//}
-
-	//c.VmlinuzPath = "/Users/wkozaczuk/Tools/OSv-on-hyperkit/vmlinuz3.bin"
-	c.VmlinuzPath = "/Users/wkozaczuk/projects/hyperkit/vmlinuz7.bin"
-
 	args := make([]string, 0)
 	args = append(args, "-A")                                                      // Enable ACPI
 	args = append(args, "-x")                                                      // Enable x2APIC
 	args = append(args, "-c", strconv.Itoa(c.Cpus))                                // Number of cpus
-	args = append(args, "-m", strconv.FormatInt(c.Memory, 10)+"M")                 // Memory
+	args = append(args, "-m", strconv.FormatInt(c.Memory, 10)+"M")           // Memory
 	args = append(args, "-f", fmt.Sprintf("kexec,%s,,\"%s\"", c.VmlinuzPath, c.Cmd)) //firmware, kernel and commandline
 	args = append(args, "-l", "com1,stdio")                                        // ???
 	args = append(args, "-s", "0:0,hostbridge")                                    // PCI bus
@@ -93,7 +88,13 @@ func (c *VMConfig) vmArguments() ([]string, error) {
 		}
 		args = append(args, "-s", fmt.Sprintf("%d:0,virtio-vpnkit,path=%s", nextSlot, vpnSockPath))
 		nextSlot++
-		args = append(args, "-s", fmt.Sprintf("%d,virtio-sock,guest_cid=%d,path=%s", nextSlot, 3, ""))
+		vsockDirPath := filepath.Join(c.InstanceDir, "vsockState")
+		err = os.MkdirAll(vsockDirPath, 0775)
+		if err != nil {
+			return args, errors.New(fmt.Sprintf("%s: failed to create vstate dir", vsockDirPath))
+		}
+		args = append(args, "-s", fmt.Sprintf("%d,virtio-sock,guest_cid=%d,path=%s",
+			nextSlot, 3, vsockDirPath))
 		nextSlot++
 	case "vnet":
 		args = append(args, "-s", fmt.Sprintf("%d:0,virtio-net", nextSlot))
