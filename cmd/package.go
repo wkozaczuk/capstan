@@ -270,7 +270,7 @@ func ComposePackageAndUploadToRemoteInstance(repo *util.Repo, verbose, pullMissi
 // and collect the content in the $CWD/mpm-pkg directory.
 func CollectPackage(repo *util.Repo, packageDir string, pullMissing, remote, verbose bool) error {
 	// Get the manifest file of the given package.
-	pkg, err := core.ParsePackageManifest(filepath.Join(packageDir, "meta", "package.yaml"))
+	pkg, err := core.ParsePackageManifestAndFallbackToDefault(filepath.Join(packageDir, "meta", "package.yaml"))
 	if err != nil {
 		return err
 	}
