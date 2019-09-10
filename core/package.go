@@ -51,7 +51,7 @@ func (p *Package) Parse(data []byte) error {
 func ParsePackageManifestAndFallbackToDefault(manifestFile string) (Package, error) {
 	// Make sure the metadata file exists.
 	if _, err := os.Stat(manifestFile); os.IsNotExist(err) {
-		fmt.Printf("Manifest file %s does not exist. Assuming default manifest", manifestFile)
+		fmt.Printf("Manifest file %s does not exist. Assuming default manifest\n", manifestFile)
 		return Package{
 			Name:   "App",
 			Title:  "App",

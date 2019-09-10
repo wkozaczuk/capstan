@@ -201,18 +201,18 @@ func (s *suite) TestInitPackage(c *C) {
 	}
 }
 
-func (*suite) TestComposeNonPackageFails(c *C) {
+func (*suite) TestComposeWithNoManifestSucceeds(c *C) {
 	// We are going to create an empty temp directory.
 	tmp, _ := ioutil.TempDir("", "pkg")
 	defer os.RemoveAll(tmp)
 
 	repo := util.NewRepo(util.DefaultRepositoryUrl)
 	imageSize, _ := util.ParseMemSize("64M")
-	appName := "test-app"
+	appName := "test-corrupt-app"
 
-	err := ComposePackage(repo, []string {}, imageSize, false, false, false, tmp, appName, &BootOptions{}, "zfs")
+	err := ComposePackage(repo, []string {}, imageSize, false, false, true, tmp, appName, &BootOptions{}, "rofs")
 
-	c.Assert(err, NotNil)
+	c.Assert(err, IsNil)
 }
 
 func (*suite) TestComposeCorruptPackageFails(c *C) {
@@ -229,7 +229,7 @@ func (*suite) TestComposeCorruptPackageFails(c *C) {
 
 	repo := util.NewRepo(util.DefaultRepositoryUrl)
 	imageSize, _ := util.ParseMemSize("64M")
-	appName := "test-app"
+	appName := "test-corrupt-app"
 
 	err = ComposePackage(repo, []string {}, imageSize, false, false, false, tmp, appName, &BootOptions{}, "zfs")
 	c.Assert(err, NotNil)
