@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -85,6 +86,10 @@ func RemoteFileInfo(repo_url string, path string) *FileInfo {
 			repo_url+path, resp.StatusCode, string(data))
 		return nil
 	}
+	fmt.Printf("RemoteFileInfo -> [%s%s]", repo_url, path);
+	theUrl, _ := url.Parse(repo_url + path)
+	os.MkdirAll("/tmp/github" + theUrl.Path, os.ModePerm)
+	ioutil.WriteFile("/tmp/github" + theUrl.Path + "/payload", data, 0644)
 	err = yaml.Unmarshal(data, &f)
 	if err != nil {
 		return nil
@@ -111,6 +116,10 @@ func remotePackageInfo(package_url string) *core.Package {
 	defer resp.Body.Close()
 
 	data, err := ioutil.ReadAll(resp.Body)
+	fmt.Printf("remotePackageInfo -> [%s]", package_url);
+	theUrl, _ := url.Parse(package_url)
+	os.MkdirAll("/tmp/github" + theUrl.Path, os.ModePerm)
+	ioutil.WriteFile("/tmp/github" + theUrl.Path + "/payload", data, 0644)
 	if resp.StatusCode != 200 {
 		fmt.Printf("The request %s returned non-200 [%d] response: %s.",
 			package_url, resp.StatusCode, string(data))
@@ -163,6 +172,9 @@ func (r *Repo) downloadFile(fileURL string, destPath string, name string) error 
 		Proxy:              http.ProxyFromEnvironment,
 	}
 	client := &http.Client{Transport: tr}
+	theUrl, _ := url.Parse(fileURL)
+	os.MkdirAll("/tmp/github" + theUrl.Path, os.ModePerm)
+	ioutil.WriteFile("/tmp/github" + theUrl.Path + "/payload", []byte("Some stub data"), 0644)
 	resp, err := client.Get(fileURL)
 	if err != nil {
 		return err

@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	OsvReleasesGitHubRepositoryApiUrl = "https://api.github.com/repos/cloudius-systems/osv/releases"
+	OsvReleasesSuffix = "/repos/cloudius-systems/osv/releases"
 )
 
 type Asset struct {
@@ -48,7 +48,7 @@ func (r *Repo) queryReleases() ([]Release, error) {
 	//
 	// Fetch release info with assets for the latest one or identified by tag
 	// or all releases each with array of assets
-	responseBytes, err := githubMakeReleaseApiCall(apiSuffix)
+	responseBytes, err := r.githubMakeReleaseApiCall(apiSuffix)
 	if err != nil {
 		return nil, err
 	}
@@ -210,11 +210,12 @@ func (r *Repo) githubPackageInfoRemote(packageName string) *core.Package {
 	return remotePackageInfo(packageDownloadInfo.manifestURL)
 }
 
-func githubMakeReleaseApiCall(suffix string) ([]byte, error) {
-	var netClient = &http.Client{
+func (r *Repo) githubMakeReleaseApiCall(suffix string) ([]byte, error) {
+	var	netClient = &http.Client{
 		Timeout: time.Second * 10,
 	}
-	resp, err := netClient.Get(OsvReleasesGitHubRepositoryApiUrl + suffix)
+	fullUrl := r.GithubURL + OsvReleasesSuffix + suffix
+	resp, err := netClient.Get(fullUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -223,9 +224,13 @@ func githubMakeReleaseApiCall(suffix string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Printf("githubMakeReleaseApiCall -> [%s]", fullUrl);
+	//theUrl, _ := url.Parse(OsvReleasesGitHubRepositoryApiUrl + suffix)
+	//os.MkdirAll("/tmp/github" + theUrl.Path, os.ModePerm)
+	//ioutil.WriteFile("/tmp/github" + theUrl.Path + "/payload", body, 0644)
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("The request %s returned non-200 [%d] response: %s.",
-			OsvReleasesGitHubRepositoryApiUrl+suffix, resp.StatusCode, string(body))
+			fullUrl, resp.StatusCode, string(body))
 	}
 	return body, nil
 }

@@ -1,19 +1,51 @@
 package util
 
 import (
+	"fmt"
 	. "gopkg.in/check.v1"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"time"
 	"math/rand"
 )
 
+func (s *suite) SetUpSuite(c *C) {
+	s.server = httptest.NewServer(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			path := "testdata/github" + r.RequestURI + "/payload"
+			fmt.Printf(" -> Mocking: " + path + "\n")
+			if payload, err := ioutil.ReadFile(path); err == nil {
+				payloadStr := string(payload)
+				payloadStr = strings.ReplaceAll(payloadStr, "https://github.com", s.server.URL)
+				w.Write([]byte(payloadStr))
+			} else {
+				http.Error(w, "not found", http.StatusNotFound)
+			}
+		}))
+	fmt.Printf("Smok-> SetUpSuite\n")
+}
+
+func (s *suite) TearDownSuite(c *C) {
+	s.server.Close()
+	fmt.Printf("Smok-> TearDownSuite\n")
+}
+
 type suite struct {
 	repo *Repo
+	server *httptest.Server
 }
 
 func (s *suite) SetUpTest(c *C) {
 	s.repo = NewRepo(DefaultRepositoryUrl)
 	s.repo.Path = c.MkDir()
 	s.repo.UseS3 = false
+
+	//defer apiServer.Close()
+
+	s.repo.GithubURL = s.server.URL
+	fmt.Printf("Smok-> SetUpTest\n")
 }
 
 var _ = Suite(&suite{})
